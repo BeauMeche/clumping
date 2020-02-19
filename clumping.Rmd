@@ -69,21 +69,26 @@ calc_clumped_tables <- function(seating){
   # to do a fair bit of fussing to make sure this is working. Test cases would
   # be good!
   
-  clumps <- 
-    (sum(plan[1:4] == "F") %in% c(0, 4)) +
-    (sum(plan[5:8] == "F") %in% c(0, 4)) +
-    (sum(plan[9:12] == "F") %in% c(0, 4)) +
-    (sum(plan[13:16] == "F") %in% c(0, 4)) +
-    (sum(plan[17:20] == "F") %in% c(0, 4)) +
-    (sum(plan[21:24] == "F") %in% c(0, 4)) +
-    (sum(plan[25:28] == "F") %in% c(0, 4))
   
+  # this was edited to call female clumping == 3,4
+  
+  clumps <- 
+    (sum(plan[1:4] == "F") %in% c(4)) +
+    (sum(plan[5:8] == "F") %in% c(4)) +
+    (sum(plan[9:12] == "F") %in% c(4)) +
+    (sum(plan[13:16] == "F") %in% c(4)) +
+    (sum(plan[17:20] == "F") %in% c(4)) +
+    (sum(plan[21:24] == "F") %in% c(4)) +
+    (sum(plan[25:28] == "F") %in% c(4))
+  
+
   return(clumps)
+
 }
 
 ```
 
-```{r sim, cache=TRUE}
+```{r sim, cache=FALSE}
 # Those are all the tools we need. Many/most of my simulations use the tricks we
 # learned in Gov 1005: list-colums and map_* functions are your friends!
 # https://davidkane9.github.io/PPBDS/6-functions.html#list-columns-and-map_-functions
@@ -112,7 +117,64 @@ sim %>%
          caption = "Data Collected in Gov 1006 on 2020-02-12",
          x = "Number of Single-Gender Tables out of Seven",
          y = "Percentage of Simulations out of 10,000")
+
+
+# find p-value for clumps of 3 overall
+
+library(gt)
+
+sim %>% 
+  count(clumps) %>% 
+  mutate(p_val = n/10000) %>% 
+  gt()
+
+sim %>% 
+  count(clumps) %>% 
+  mutate(p_val = n/10000) %>% 
+  filter(clumps >= 3) %>% 
+  pull(p_val)
+
 ```
+
+
+
+```{r whining_students}
+
+stud <- 1000
+
+ps1 <- rnorm(stud, 75, 15)
+
+noise1 <- rnorm(stud, 0, 15)
+noise2 <- rnorm(stud, 0, 15)
+
+mid <- ps1 + noise1
+final <- ps1 + noise2
+
+exams <- data.frame(mid, final)
+
+exams <- exams %>% 
+  mutate(diff = final - mid)
+
+# regress to the mean
+
+fit1 <- glm(final ~ mid, data = exams)
+
+plot(mid, final, xlab = "midterm score",
+     ylab = "final exam score")
+abline(coef(fit1), col = "red")
+
+exams <- exams %>% 
+  mutate(whine = 0) %>% 
+  mutate(treatment = 0)
+
+for (i in 1:100) {
+  if(diff < mid - (2*sd(mid))){
+    exams$whine[i] <- rbinom(1, 1, .75)
+  }elseif{}
+}
+
+```
+
 
 
 
